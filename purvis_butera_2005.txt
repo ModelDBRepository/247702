@@ -1,0 +1,675 @@
+//
+//This CellML file was generated on 21/07/2008 at 9:20:03 at a.m. using:
+//
+//COR (0.9.31.979)
+//Copyright 2002-2008 Dr Alan Garny
+//http://COR.physiol.ox.ac.uk/ - COR@physiol.ox.ac.uk
+//
+//CellML 1.0 was used to generate this model
+//http://www.CellML.org/
+//
+
+def model{butera_purvis_2004} butera_purvis_2004 as
+    def unit millisecond as
+        unit second {pref: milli};
+    enddef;
+
+    def unit millivolt as
+        unit volt {pref: milli};
+    enddef;
+
+    def unit nanoA as
+        unit ampere {pref: nano};
+    enddef;
+
+    def unit uS as
+        unit siemens {pref: micro};
+    enddef;
+
+    def unit uF as
+        unit farad {pref: nano};
+    enddef;
+
+    def unit uM as
+        unit mole {pref: micro};
+        unit liter {expo: -1};
+    enddef;
+
+    def unit per_ms as
+        unit millisecond {expo: -1};
+    enddef;
+
+    def unit uM_per_nanocoulomb as
+        unit uM;
+        unit coulomb {pref: nano, expo: -1};
+    enddef;
+
+    def comp environment as
+        var{environment_time} time: millisecond {pub: out};
+    enddef;
+
+    def comp membrane as
+        var{membrane_V} V: millivolt {init: -71.847, pub: out};
+        var C: uF {init: 0.04};
+        var time: millisecond {pub: in};
+        var i_Na: nanoA {pub: in};
+        var i_NaP: nanoA {pub: in};
+        var i_K: nanoA {pub: in};
+        var i_leak: nanoA {pub: in};
+        var i_T: nanoA {pub: in};
+        var i_N: nanoA {pub: in};
+        var i_P: nanoA {pub: in};
+        var i_SK: nanoA {pub: in};
+        var i_A: nanoA {pub: in};
+        var i_H: nanoA {pub: in};
+        var i_app: nanoA {pub: in};
+
+        ode(V, time) = (-(i_Na+i_NaP+i_K+i_leak+i_T+i_N+i_P+i_SK+i_A+i_H)+i_app)/C;
+    enddef;
+
+    def comp sodium_current as
+        var{sodium_current_i_Na} i_Na: nanoA {pub: out};
+        var g_Na: uS {init: 0.7};
+        var E_Na: millivolt {init: 60, pub: out};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var m: dimensionless {priv: in};
+        var h: dimensionless {priv: in};
+
+        i_Na = g_Na*pow(m, 3{dimensionless})*h*(V-E_Na);
+    enddef;
+
+    def comp sodium_current_h_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var h: dimensionless {init: 0.981, pub: out};
+        var theta_h: millivolt {init: 44.1};
+        var sigma_h: millivolt {init: 7};
+        var theta_1: millivolt {init: 35};
+        var sigma_1: millivolt {init: 4};
+        var sigma_2: millivolt {init: 25};
+        var tau_h: millisecond;
+        var h_infinity: dimensionless;
+
+        tau_h = 3.5{millisecond}/(exp((V+theta_1)/sigma_1)+exp(-(V+theta_1)/sigma_2))+1{millisecond};
+        h_infinity = 1{dimensionless}/(1{dimensionless}+exp((V+theta_h)/sigma_h));
+        ode(h, time) = (h_infinity-h)/tau_h;
+    enddef;
+
+    def comp sodium_current_m_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var m: dimensionless {init: 0.015, pub: out};
+        var theta_m: millivolt {init: 36};
+        var sigma_m: millivolt {init: 8.5};
+        var tau_m: millisecond {init: 0.1};
+        var m_infinity: dimensionless;
+
+        m_infinity = 1{dimensionless}/(1{dimensionless}+exp((V+theta_m)/-sigma_m));
+        ode(m, time) = (m_infinity-m)/tau_m;
+    enddef;
+
+    def comp persistent_sodium_current as
+        var{persistent_sodium_current_i_NaP} i_NaP: nanoA {pub: out};
+        var g_NaP: uS {init: 0.05};
+        var E_Na: millivolt {pub: in};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var m: dimensionless {priv: in};
+        var h: dimensionless {priv: in};
+
+        i_NaP = g_NaP*m*h*(V-E_Na);
+    enddef;
+
+    def comp persistent_sodium_current_h_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var h: dimensionless {init: 0.797, pub: out};
+        var theta_h: millivolt {init: 65};
+        var sigma_h: millivolt {init: 5};
+        var tau_h: millisecond {init: 150};
+        var h_infinity: dimensionless;
+
+        h_infinity = 1{dimensionless}/(1{dimensionless}+exp((V+theta_h)/sigma_h));
+        ode(h, time) = (h_infinity-h)/tau_h;
+    enddef;
+
+    def comp persistent_sodium_current_m_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var m: dimensionless {init: 0.002, pub: out};
+        var theta_m: millivolt {init: 47.1};
+        var sigma_m: millivolt {init: 4.1};
+        var tau_m: millisecond {init: 0.1};
+        var m_infinity: dimensionless;
+
+        m_infinity = 1{dimensionless}/(1{dimensionless}+exp(-(V+theta_m)/sigma_m));
+        ode(m, time) = (m_infinity-m)/tau_m;
+    enddef;
+
+    def comp delayed_rectifier_current as
+        var{delayed_rectifier_current_i_K} i_K: nanoA {pub: out};
+        var g_K: uS {init: 1.3};
+        var E_K: millivolt {init: -80, pub: out};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var n: dimensionless {priv: in};
+
+        i_K = g_K*pow(n, 4{dimensionless})*(V-E_K);
+    enddef;
+
+    def comp delayed_rectifier_current_n_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var n: dimensionless {init: 0.158, pub: out};
+        var theta_n: millivolt {init: 30};
+        var sigma_n: millivolt {init: 25};
+        var theta_1: millivolt {init: 30};
+        var sigma_1: millivolt {init: 40};
+        var sigma_2: millivolt {init: 50};
+        var tau_n: millisecond;
+        var n_infinity: dimensionless;
+
+        tau_n = 2.5{millisecond}/(exp((V+theta_1)/sigma_1)+exp(-(V+theta_1)/sigma_2))+0.01{millisecond};
+        n_infinity = 1{dimensionless}/(1{dimensionless}+exp(-(V+theta_n)/sigma_n));
+        ode(n, time) = (n_infinity-n)/tau_n;
+    enddef;
+
+    def comp leak_current as
+        var{leak_current_i_leak} i_leak: nanoA {pub: out};
+        var g_leak: uS {init: 0.005};
+        var E_leak: millivolt {init: -50};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+
+        i_leak = g_leak*(V-E_leak);
+    enddef;
+
+    def comp LVA_calcium_current as
+        var{LVA_calcium_current_i_T} i_T: nanoA {pub: out};
+        var g_T: uS {init: 0.1};
+        var E_Ca: millivolt {init: 40, pub: out};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var m: dimensionless {priv: in};
+        var h: dimensionless {priv: in};
+
+        i_T = g_T*m*h*(V-E_Ca);
+    enddef;
+
+    def comp LVA_calcium_current_m_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var m: dimensionless {init: 0.001, pub: out};
+        var theta_m: millivolt {init: 38};
+        var sigma_m: millivolt {init: 5};
+        var theta_1: millivolt {init: 28};
+        var sigma_1: millivolt {init: 25};
+        var sigma_2: millivolt {init: 70};
+        var tau_m: millisecond;
+        var m_infinity: dimensionless;
+
+        tau_m = 5{millisecond}/(exp((V+theta_1)/sigma_1)+exp(-(V+theta_1)/sigma_2))+2{millisecond};
+        m_infinity = 1{dimensionless}/(1{dimensionless}+exp(-(V+theta_m)/sigma_m));
+        ode(m, time) = (m_infinity-m)/tau_m;
+    enddef;
+
+    def comp LVA_calcium_current_h_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var h: dimensionless {init: 0.562, pub: out};
+        var theta_h: millivolt {init: 70.1};
+        var sigma_h: millivolt {init: 7};
+        var theta_1: millivolt {init: 70};
+        var sigma_1: millivolt {init: 65};
+        var tau_h: millisecond;
+        var h_infinity: dimensionless;
+
+        tau_h = 20{millisecond}/(exp((V+theta_1)/sigma_1)+exp(-(V+theta_1)/sigma_1))+1{millisecond};
+        h_infinity = 1{dimensionless}/(1{dimensionless}+exp((V+theta_h)/sigma_h));
+        ode(h, time) = (h_infinity-h)/tau_h;
+    enddef;
+
+    def comp N_HVA_calcium_current as
+        var{N_HVA_calcium_current_i_N} i_N: nanoA {pub: out};
+        var g_N: uS {init: 0.05};
+        var E_Ca: millivolt {pub: in};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var m: dimensionless {priv: in};
+        var h: dimensionless {priv: in};
+
+        i_N = g_N*m*h*(V-E_Ca);
+    enddef;
+
+    def comp N_HVA_calcium_current_m_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var m: dimensionless {init: 0.001, pub: out};
+        var theta_m: millivolt {init: 30};
+        var sigma_m: millivolt {init: 6};
+        var tau_m: millisecond {init: 5};
+        var m_infinity: dimensionless;
+
+        m_infinity = 1{dimensionless}/(1{dimensionless}+exp(-(V+theta_m)/sigma_m));
+        ode(m, time) = (m_infinity-m)/tau_m;
+    enddef;
+
+    def comp N_HVA_calcium_current_h_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var h: dimensionless {init: 0.649, pub: out};
+        var theta_h: millivolt {init: 70};
+        var sigma_h: millivolt {init: 3};
+        var tau_h: millisecond {init: 25};
+        var h_infinity: dimensionless;
+
+        h_infinity = 1{dimensionless}/(1{dimensionless}+exp((V+theta_h)/sigma_h));
+        ode(h, time) = (h_infinity-h)/tau_h;
+    enddef;
+
+    def comp P_HVA_calcium_current as
+        var{P_HVA_calcium_current_i_P} i_P: nanoA {pub: out};
+        var g_P: uS {init: 0.05};
+        var E_Ca: millivolt {pub: in};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var m: dimensionless {priv: in};
+
+        i_P = g_P*m*(V-E_Ca);
+    enddef;
+
+    def comp P_HVA_calcium_current_m_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var m: dimensionless {init: 0, pub: out};
+        var theta_m: millivolt {init: 17};
+        var sigma_m: millivolt {init: 3};
+        var tau_m: millisecond {init: 10};
+        var m_infinity: dimensionless;
+
+        m_infinity = 1{dimensionless}/(1{dimensionless}+exp(-(V+theta_m)/sigma_m));
+        ode(m, time) = (m_infinity-m)/tau_m;
+    enddef;
+
+    def comp calcium_dependent_potassium_current as
+        var{calcium_dependent_potassium_current_i_SK} i_SK: nanoA {pub: out};
+        var g_SK: uS {init: 0.4};
+        var E_K: millivolt {pub: in};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var i_T: nanoA {pub: in, priv: out};
+        var i_N: nanoA {pub: in, priv: out};
+        var i_P: nanoA {pub: in, priv: out};
+        var z: dimensionless {priv: in};
+
+        i_SK = g_SK*sqr(z)*(V-E_K);
+    enddef;
+
+    def comp calcium_dependent_potassium_current_z_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var i_T: nanoA {pub: in};
+        var i_N: nanoA {pub: in};
+        var i_P: nanoA {pub: in};
+        var z: dimensionless {init: 0, pub: out};
+        var K1: uM_per_nanocoulomb {init: -500};
+        var K2: per_ms {init: 0.04};
+        var Ca_conc: uM {init: 0.0604};
+        var tau_z: millisecond {init: 1};
+        var z_infinity: dimensionless;
+
+        ode(Ca_conc, time) = 1{second}/1000{millisecond}*K1*(i_T+i_N+i_P)-K2*Ca_conc;
+        z_infinity = 1{dimensionless}/(1{dimensionless}+sqr(0.003{uM}/Ca_conc));
+        ode(z, time) = (z_infinity-z)/tau_z;
+    enddef;
+
+    def comp fast_transient_potassium_current as
+        var{fast_transient_potassium_current_i_A} i_A: nanoA {pub: out};
+        var g_A: uS {init: 1};
+        var E_K: millivolt {pub: in};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var m: dimensionless {priv: in};
+        var h: dimensionless {priv: in};
+
+        i_A = g_A*m*h*(V-E_K);
+    enddef;
+
+    def comp fast_transient_potassium_current_m_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var m: dimensionless {init: 0.057, pub: out};
+        var theta_m: millivolt {init: 27};
+        var sigma_m: millivolt {init: 16};
+        var theta_1: millivolt {init: 40};
+        var theta_2: millivolt {init: 74};
+        var sigma_1: millivolt {init: 5};
+        var sigma_2: millivolt {init: 7.5};
+        var tau_m: millisecond;
+        var m_infinity: dimensionless;
+
+        tau_m = 1{millisecond}/(exp((V+theta_1)/sigma_1)+exp(-(V+theta_2)/sigma_2))+0.37{millisecond};
+        m_infinity = 1{dimensionless}/(1{dimensionless}+exp(-(V+theta_m)/sigma_m));
+        ode(m, time) = (m_infinity-m)/tau_m;
+    enddef;
+
+    def comp fast_transient_potassium_current_h_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var h: dimensionless {init: 0.287, pub: out};
+        var theta_h: millivolt {init: 80};
+        var sigma_h: millivolt {init: 11};
+        var tau_h: millisecond {init: 20};
+        var h_infinity: dimensionless;
+
+        h_infinity = 1{dimensionless}/(1{dimensionless}+exp((V+theta_h)/sigma_h));
+        ode(h, time) = (h_infinity-h)/tau_h;
+    enddef;
+
+    def comp hyperpolarization_activated_current as
+        var{hyperpolarization_activated_current_i_H} i_H: nanoA {pub: out};
+        var g_H: uS {init: 0.005};
+        var E_H: millivolt {init: -38.8};
+        var V: millivolt {pub: in, priv: out};
+        var time: millisecond {pub: in, priv: out};
+        var m: dimensionless {priv: in};
+
+        i_H = g_H*m*(V-E_H);
+    enddef;
+
+    def comp hyperpolarization_activated_current_m_gate as
+        var V: millivolt {pub: in};
+        var time: millisecond {pub: in};
+        var m: dimensionless {init: 0.182, pub: out};
+        var theta_m: millivolt {init: 79.8};
+        var sigma_m: millivolt {init: 5.3};
+        var theta_1: millivolt {init: 70};
+        var sigma_1: millivolt {init: 11};
+        var tau_m: millisecond;
+        var m_infinity: dimensionless;
+
+        tau_m = 1{millisecond}/(exp((V+theta_1)/sigma_1)+exp(-(V+theta_1)/sigma_1))+50{millisecond};
+        m_infinity = 1{dimensionless}/(1{dimensionless}+exp((V+theta_m)/sigma_m));
+        ode(m, time) = (m_infinity-m)/tau_m;
+    enddef;
+
+    def comp stimulus_protocol as
+        var i_app: nanoA {pub: out};
+        var i_stimStart: millisecond {init: 10};
+        var i_stimEnd: millisecond {init: 200};
+        var i_stimAmplitude: nanoA {init: .22;
+        var time: millisecond {pub: in};
+
+        i_app = sel
+            case (time >= i_stimStart) and (time <= i_stimEnd):
+                i_stimAmplitude;
+            otherwise:
+                0{nanoA};
+        endsel;
+    enddef;
+
+    def group as encapsulation for
+        comp sodium_current incl
+            comp sodium_current_h_gate;
+            comp sodium_current_m_gate;
+        endcomp;
+
+        comp persistent_sodium_current incl
+            comp persistent_sodium_current_h_gate;
+            comp persistent_sodium_current_m_gate;
+        endcomp;
+
+        comp delayed_rectifier_current incl
+            comp delayed_rectifier_current_n_gate;
+        endcomp;
+
+        comp LVA_calcium_current incl
+            comp LVA_calcium_current_h_gate;
+            comp LVA_calcium_current_m_gate;
+        endcomp;
+
+        comp N_HVA_calcium_current incl
+            comp N_HVA_calcium_current_h_gate;
+            comp N_HVA_calcium_current_m_gate;
+        endcomp;
+
+        comp P_HVA_calcium_current incl
+            comp P_HVA_calcium_current_m_gate;
+        endcomp;
+
+        comp calcium_dependent_potassium_current incl
+            comp calcium_dependent_potassium_current_z_gate;
+        endcomp;
+
+        comp fast_transient_potassium_current incl
+            comp fast_transient_potassium_current_h_gate;
+            comp fast_transient_potassium_current_m_gate;
+        endcomp;
+
+        comp hyperpolarization_activated_current incl
+            comp hyperpolarization_activated_current_m_gate;
+        endcomp;
+    enddef;
+
+    def map between environment and membrane for
+        vars time and time;
+    enddef;
+
+    def map between environment and sodium_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and persistent_sodium_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and delayed_rectifier_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and leak_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and LVA_calcium_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and N_HVA_calcium_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and P_HVA_calcium_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and calcium_dependent_potassium_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and fast_transient_potassium_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and hyperpolarization_activated_current for
+        vars time and time;
+    enddef;
+
+    def map between environment and stimulus_protocol for
+        vars time and time;
+    enddef;
+
+    def map between membrane and stimulus_protocol for
+        vars i_app and i_app;
+    enddef;
+
+    def map between membrane and sodium_current for
+        vars V and V;
+        vars i_Na and i_Na;
+    enddef;
+
+    def map between sodium_current and sodium_current_h_gate for
+        vars V and V;
+        vars time and time;
+        vars h and h;
+    enddef;
+
+    def map between sodium_current and sodium_current_m_gate for
+        vars V and V;
+        vars time and time;
+        vars m and m;
+    enddef;
+
+    def map between sodium_current and persistent_sodium_current for
+        vars E_Na and E_Na;
+    enddef;
+
+    def map between membrane and persistent_sodium_current for
+        vars V and V;
+        vars i_NaP and i_NaP;
+    enddef;
+
+    def map between persistent_sodium_current and persistent_sodium_current_h_gate for
+        vars V and V;
+        vars time and time;
+        vars h and h;
+    enddef;
+
+    def map between persistent_sodium_current and persistent_sodium_current_m_gate for
+        vars V and V;
+        vars time and time;
+        vars m and m;
+    enddef;
+
+    def map between membrane and delayed_rectifier_current for
+        vars V and V;
+        vars i_K and i_K;
+    enddef;
+
+    def map between delayed_rectifier_current and delayed_rectifier_current_n_gate for
+        vars V and V;
+        vars time and time;
+        vars n and n;
+    enddef;
+
+    def map between membrane and leak_current for
+        vars V and V;
+        vars i_leak and i_leak;
+    enddef;
+
+    def map between membrane and LVA_calcium_current for
+        vars V and V;
+        vars i_T and i_T;
+    enddef;
+
+    def map between LVA_calcium_current and LVA_calcium_current_m_gate for
+        vars V and V;
+        vars time and time;
+        vars m and m;
+    enddef;
+
+    def map between LVA_calcium_current and LVA_calcium_current_h_gate for
+        vars V and V;
+        vars time and time;
+        vars h and h;
+    enddef;
+
+    def map between membrane and N_HVA_calcium_current for
+        vars V and V;
+        vars i_N and i_N;
+    enddef;
+
+    def map between N_HVA_calcium_current and N_HVA_calcium_current_m_gate for
+        vars V and V;
+        vars time and time;
+        vars m and m;
+    enddef;
+
+    def map between N_HVA_calcium_current and N_HVA_calcium_current_h_gate for
+        vars V and V;
+        vars time and time;
+        vars h and h;
+    enddef;
+
+    def map between membrane and P_HVA_calcium_current for
+        vars V and V;
+        vars i_P and i_P;
+    enddef;
+
+    def map between P_HVA_calcium_current and P_HVA_calcium_current_m_gate for
+        vars V and V;
+        vars time and time;
+        vars m and m;
+    enddef;
+
+    def map between membrane and calcium_dependent_potassium_current for
+        vars V and V;
+        vars i_SK and i_SK;
+    enddef;
+
+    def map between calcium_dependent_potassium_current and calcium_dependent_potassium_current_z_gate for
+        vars V and V;
+        vars time and time;
+        vars z and z;
+        vars i_T and i_T;
+        vars i_N and i_N;
+        vars i_P and i_P;
+    enddef;
+
+    def map between calcium_dependent_potassium_current and LVA_calcium_current for
+        vars i_T and i_T;
+    enddef;
+
+    def map between calcium_dependent_potassium_current and N_HVA_calcium_current for
+        vars i_N and i_N;
+    enddef;
+
+    def map between calcium_dependent_potassium_current and P_HVA_calcium_current for
+        vars i_P and i_P;
+    enddef;
+
+    def map between membrane and fast_transient_potassium_current for
+        vars V and V;
+        vars i_A and i_A;
+    enddef;
+
+    def map between fast_transient_potassium_current and fast_transient_potassium_current_m_gate for
+        vars V and V;
+        vars time and time;
+        vars m and m;
+    enddef;
+
+    def map between fast_transient_potassium_current and fast_transient_potassium_current_h_gate for
+        vars V and V;
+        vars time and time;
+        vars h and h;
+    enddef;
+
+    def map between membrane and hyperpolarization_activated_current for
+        vars V and V;
+        vars i_H and i_H;
+    enddef;
+
+    def map between hyperpolarization_activated_current and hyperpolarization_activated_current_m_gate for
+        vars V and V;
+        vars time and time;
+        vars m and m;
+    enddef;
+
+    def map between LVA_calcium_current and N_HVA_calcium_current for
+        vars E_Ca and E_Ca;
+    enddef;
+
+    def map between LVA_calcium_current and P_HVA_calcium_current for
+        vars E_Ca and E_Ca;
+    enddef;
+
+    def map between delayed_rectifier_current and calcium_dependent_potassium_current for
+        vars E_K and E_K;
+    enddef;
+
+    def map between delayed_rectifier_current and fast_transient_potassium_current for
+        vars E_K and E_K;
+    enddef;
+enddef;
